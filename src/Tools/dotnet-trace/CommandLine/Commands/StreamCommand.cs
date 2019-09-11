@@ -100,9 +100,10 @@ namespace Microsoft.Diagnostics.Tools.Trace.CommandLine.Commands
                 PrintProviders(providerCollection);
 
                 var process = Process.GetProcessById(processId);
-                var configuration = new SessionConfiguration(
+                var configuration = new SessionConfigurationV2(
                     circularBufferSizeMB: buffersize,
                     format: EventPipeSerializationFormat.NetTrace,
+                    requestRundown: false,
                     providers: providerCollection);
 
                 var shouldExit = new ManualResetEvent(false);
@@ -114,7 +115,7 @@ namespace Microsoft.Diagnostics.Tools.Trace.CommandLine.Commands
                 ct.Register(() => shouldExit.Set());
 
                 ulong sessionId = 0;
-                using (Stream stream = EventPipeClient.CollectTracing(processId, configuration, out sessionId))
+                using (Stream stream = EventPipeClient.CollectTracing2(processId, configuration, out sessionId))
                 {
                     if (sessionId == 0)
                     {
@@ -187,7 +188,7 @@ namespace Microsoft.Diagnostics.Tools.Trace.CommandLine.Commands
 
         private static void Dynamic_All(TraceEvent obj)
         {
-            if (obj.EventName != "EventWriteString" && !obj.EventName.Contains("Rundown"))
+            if (obj.EventName != "EventWriteString")
             {
                 Console.Out.WriteLine($"{obj.TimeStampRelativeMSec.ToString("0000000")} {obj.EventName} {obj.ID}: {obj.FormattedMessage}");
             }
