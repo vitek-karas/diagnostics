@@ -21,7 +21,7 @@ namespace Microsoft.Diagnostics.Tools.Trace.CommandLine.Commands
             uint buffersize, 
             string providers, 
             string profile, 
-            string manifest,
+            IEnumerable<string> manifests,
             TimeSpan duration);
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Microsoft.Diagnostics.Tools.Trace.CommandLine.Commands
             uint buffersize, 
             string providers, 
             string profile, 
-            string manifest,
+            IEnumerable<string> manifests,
             TimeSpan duration)
         {
             try
@@ -139,7 +139,7 @@ namespace Microsoft.Diagnostics.Tools.Trace.CommandLine.Commands
 
                             EventPipeEventSource eventSource = new EventPipeEventSource(stream);
                             eventSource.Dynamic.All += Dynamic_All;
-                            if (manifest != null)
+                            foreach (string manifest in manifests)
                             {
                                 eventSource.Dynamic.AddDynamicProvider(new Tracing.Parsers.ProviderManifest(manifest));
                             }
@@ -189,7 +189,7 @@ namespace Microsoft.Diagnostics.Tools.Trace.CommandLine.Commands
         {
             if (obj.EventName != "EventWriteString" && !obj.EventName.Contains("Rundown"))
             {
-                Console.Out.WriteLine($"{obj.TimeStampRelativeMSec.ToString("0000000")} {obj.EventName} {obj.ID}");
+                Console.Out.WriteLine($"{obj.TimeStampRelativeMSec.ToString("0000000")} {obj.EventName} {obj.ID}: {obj.FormattedMessage}");
             }
         }
 
@@ -240,9 +240,9 @@ namespace Microsoft.Diagnostics.Tools.Trace.CommandLine.Commands
 
         private static Option ManifestOption() =>
             new Option(
-                aliases: new[] { "--manifest", "-m" },
-                description: "The manifest file to process.",
-                argument: new Argument<string>(defaultValue: (string)null) { Name = "manifest-file" },
+                aliases: new[] { "--manifests", "-m" },
+                description: "The manifest files to process.",
+                argument: new Argument<string[]>() { Name = "manifest-file" },
                 isHidden: false);
 
         private static Option DurationOption() =>
